@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NEBULA CITADEL ZERO — Edición Táctica V4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="arcade-shell">
+    <!-- Top HUD -->
+    <header class="hud-bar">
+      <div class="hud-group">
+        <div class="hud-item">
+          <span class="hud-label">PUNTOS</span>
+          <span id="hud-score" class="hud-value accent-teal">000000</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">RÉCORD</span>
+          <span id="hud-high" class="hud-value accent-gold">000000</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">OLEADA</span>
+          <span id="hud-wave" class="hud-value accent-pink">01</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">COMBO</span>
+          <span id="hud-combo" class="hud-value accent-amber">x1</span>
+        </div>
+      </div>
+
+      <div class="hud-group hud-right">
+        <div class="hud-item">
+          <span class="hud-label">NAVES</span>
+          <div id="hud-lives" class="pip-strip"></div>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">TÁCTICA [E]</span>
+          <div id="hud-skills" class="pip-strip"></div>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">NOVA [X]</span>
+          <div id="hud-bombs" class="pip-strip"></div>
+        </div>
+        <div class="hud-controls">
+          <a href="../index.html" class="pixel-btn menu-btn" title="Volver al Selector de Versiones">◀ MENÚ</a>
+          <button id="btn-sector" class="pixel-btn active" title="Cambiar fondo cósmico (B)">SECTOR</button>
+          <button id="btn-autofire" class="pixel-btn active" title="Auto-disparo (F)">AUTO: ON</button>
+          <button id="btn-crt" class="pixel-btn active" title="Efecto CRT (C)">CRT</button>
+          <button id="btn-sound" class="pixel-btn active" title="Sonido / Música (M)">SFX</button>
+          <button id="btn-pause" class="pixel-btn" title="Pausa (P)">PAUSA</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="neon-divider"></div>
+
+    <!-- Main Stage -->
+    <main class="stage-wrapper">
+      <canvas id="game-canvas" width="1040" height="640"></canvas>
+      <div id="crt-overlay" class="crt-overlay"></div>
+
+      <!-- Boss Bar -->
+      <div id="boss-hud" class="boss-hud hidden">
+        <div class="boss-title-row">
+          <span id="boss-name">ARCA SOLAR SOLARIS-IX</span>
+          <span id="boss-hp-text">100%</span>
+        </div>
+        <div class="boss-bar-track">
+          <div id="boss-bar-fill" class="boss-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Status Pills -->
+      <div class="weapon-hud">
+        <span id="sector-badge" class="badge sector">CINTURÓN DE CRISTAL</span>
+        <span id="tier-badge" class="badge tier">AMENAZA: BAJA</span>
+        <span id="weapon-badge" class="badge">ARMA NV.1</span>
+        <span id="drone-badge" class="badge drone hidden">DRON 18s</span>
+        <span id="shield-badge" class="badge shield hidden">ESCUDO</span>
+      </div>
+
+      <!-- Touch / Quick Actions -->
+      <div class="touch-controls">
+        <button id="btn-touch-skill" class="touch-btn skill" title="Habilidad Táctica de la nave (E)">TÁCTICA [E]</button>
+        <button id="btn-touch-bomb" class="touch-btn" title="Bomba Nova (Shift / X)">NOVA [X]</button>
+      </div>
+
+      <!-- Start / Hangar Screen -->
+      <div id="overlay-start" class="screen-overlay">
+        <div class="overlay-card">
+          <div class="marquee-tag">★ VERSIÓN 4 • EDICIÓN TÁCTICA PROGRESIVA ★</div>
+          <h1 class="game-title">NEBULA CITADEL <span>ZERO</span></h1>
+          <p class="subtitle">
+            Nuevas naves con habilidad propia, enemigos inéditos, 3 megajefes y fondos con agujero negro, astilleros y robots antiguos. Dificultad progresiva oleada a oleada y power-ups escasos pero decisivos.
+          </p>
+
+          <div class="hangar-title">SELECCIONA TU NAVE TÁCTICA</div>
+          <div id="ship-grid" class="ship-grid"></div>
+
+          <div class="controls-grid">
+            <div><kbd>WASD</kbd> / <kbd>FLECHAS</kbd> o <kbd>RATÓN</kbd> Pilotar nave</div>
+            <div><kbd>ESPACIO</kbd> Despegar / Disparar (<kbd>F</kbd> Auto)</div>
+            <div><kbd>E</kbd> Habilidad Táctica propia • <kbd>SHIFT</kbd>/<kbd>X</kbd> Bomba Nova</div>
+            <div><kbd>B</kbd> Cambiar Sector • <kbd>P</kbd> Pausa • <kbd>M</kbd> SFX</div>
+          </div>
+
+          <div class="cta-row">
+            <button id="btn-start" class="cta-btn">INICIAR MISIÓN [ESPACIO]</button>
+            <button id="btn-gallery" class="secondary-btn">GALERÍA DE ASSETS V4</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset Gallery Modal -->
+      <div id="overlay-gallery" class="screen-overlay hidden">
+        <div class="overlay-card gallery-card">
+          <div class="gallery-header">
+            <h2>ARCHIVO NUEVOS ASSETS — NEBULA CITADEL ZERO (V4)</h2>
+            <button id="btn-close-gallery" class="pixel-btn">CERRAR [ESC]</button>
+          </div>
+          <div id="gallery-content"></div>
+        </div>
+      </div>
+
+      <!-- Pause Overlay -->
+      <div id="overlay-pause" class="screen-overlay hidden">
+        <div class="overlay-card compact">
+          <h2 class="pause-title">MISIÓN EN PAUSA</h2>
+          <p class="subtitle">Pulsa <kbd>P</kbd> para reanudar el combate.</p>
+          <div class="btn-row">
+            <button id="btn-resume" class="cta-btn">CONTINUAR</button>
+            <button id="btn-restart-pause" class="pixel-btn large">REINICIAR</button>
+            <button id="btn-hangar-pause" class="pixel-btn large">HANGAR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div id="overlay-gameover" class="screen-overlay hidden">
+        <div class="overlay-card compact">
+          <div class="marquee-tag danger">TRANSMISIÓN INTERRUMPIDA</div>
+          <h2 class="gameover-title">GAME OVER</h2>
+          <div class="final-stats">
+            <div class="stat-box">
+              <span>PUNTUACIÓN</span>
+              <strong id="final-score">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>OLEADA</span>
+              <strong id="final-wave">1</strong>
+            </div>
+            <div class="stat-box">
+              <span>RÉCORD</span>
+              <strong id="final-high">0</strong>
+            </div>
+          </div>
+          <p id="new-record-msg" class="new-record hidden">★ ¡NUEVO RÉCORD TÁCTICO! ★</p>
+          <div class="btn-row">
+            <button id="btn-retry" class="cta-btn">REINTENTAR [ESPACIO]</button>
+            <button id="btn-hangar-over" class="pixel-btn large">CAMBIAR NAVE</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
