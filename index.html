@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RETRO ARCADE MULTIVERSO — Selector de Versiones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-void: #040712;
+      --card-bg: rgba(10, 17, 36, 0.9);
+      --cyan: #22d3ee;
+      --gold: #facc15;
+      --orange: #fb923c;
+      --pink: #f472b6;
+      --violet: #a855f7;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --font-pixel: "Press Start 2P", "Courier New", monospace;
+      --font-retro: "VT323", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-void);
+      color: var(--text);
+      font-family: var(--font-pixel);
+      overflow-x: hidden;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      image-rendering: pixelated;
+    }
+
+    .crt-lines {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0px,
+        rgba(255, 255, 255, 0) 2px,
+        rgba(0, 0, 0, 0.14) 3px,
+        rgba(0, 0, 0, 0.14) 4px
+      );
+    }
+
+    .launcher {
+      position: relative;
+      z-index: 2;
+      max-width: 1260px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 840px;
+    }
+
+    .coin-pill {
+      display: inline-block;
+      font-size: 8.5px;
+      letter-spacing: 1.5px;
+      color: var(--gold);
+      background: rgba(250, 204, 21, 0.1);
+      border: 1.5px solid rgba(250, 204, 21, 0.45);
+      border-radius: 999px;
+      padding: 6px 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.2);
+    }
+
+    h1 {
+      font-size: clamp(20px, 3.4vw, 34px);
+      line-height: 1.35;
+      color: #fff;
+      text-shadow: 0 4px 0 #1e3a8a, 0 0 22px rgba(34, 211, 238, 0.55);
+      margin-bottom: 10px;
+    }
+
+    h1 span {
+      background: linear-gradient(90deg, #22d3ee, #facc15, #f472b6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
+    }
+
+    .hero-sub {
+      font-family: var(--font-retro);
+      font-size: 22px;
+      line-height: 1.25;
+      color: #cbd5e1;
+    }
+
+    .cards-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .game-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--card-bg);
+      border: 2.5px solid #283a61;
+      border-radius: 14px;
+      padding: 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+
+    .game-card:hover,
+    .game-card.focused {
+      transform: translateY(-6px);
+      border-color: var(--cyan);
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.32), 0 18px 40px rgba(0, 0, 0, 0.65);
+    }
+
+    .game-card.featured {
+      border-color: rgba(250, 204, 21, 0.78);
+      background: linear-gradient(180deg, rgba(20, 25, 58, 0.94) 0%, rgba(10, 16, 36, 0.96) 100%);
+      box-shadow: 0 0 28px rgba(168, 85, 247, 0.3), 0 16px 40px rgba(0, 0, 0, 0.65);
+    }
+
+    .game-card.featured:hover,
+    .game-card.featured.focused {
+      border-color: var(--gold);
+      box-shadow: 0 0 36px rgba(250, 204, 21, 0.45), 0 18px 44px rgba(0, 0, 0, 0.7);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ver-badge {
+      font-size: 7.5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: var(--cyan);
+    }
+
+    .ver-badge.v2 {
+      background: rgba(244, 114, 182, 0.16);
+      border-color: rgba(244, 114, 182, 0.5);
+      color: var(--pink);
+    }
+
+    .ver-badge.v3 {
+      background: linear-gradient(90deg, rgba(250, 204, 21, 0.25), rgba(168, 85, 247, 0.3));
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.35);
+    }
+
+    .key-hint {
+      font-size: 7px;
+      color: var(--muted);
+    }
+
+    .preview-frame {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #1e2d4f;
+      background: #060a16;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .game-card.featured .preview-frame {
+      border-color: rgba(168, 85, 247, 0.65);
+    }
+
+    .preview-frame canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .card-title {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .game-card.featured .card-title {
+      color: var(--gold);
+      text-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+    }
+
+    .card-desc {
+      font-family: var(--font-retro);
+      font-size: 18px;
+      line-height: 1.2;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      flex: 1;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      font-size: 6.5px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      color: #93c5fd;
+    }
+
+    .game-card.featured .tag {
+      border-color: rgba(168, 85, 247, 0.55);
+      color: #e9d5ff;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #1e2d4f;
+    }
+
+    .hi-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .hi-box span {
+      font-size: 6.5px;
+      color: var(--muted);
+    }
+
+    .hi-box strong {
+      font-size: 10px;
+      color: var(--gold);
+    }
+
+    .play-pill {
+      font-size: 9px;
+      padding: 9px 13px;
+      border-radius: 6px;
+      background: #172546;
+      border: 2px solid var(--cyan);
+      color: var(--cyan);
+      transition: all 0.14s ease;
+    }
+
+    .game-card:hover .play-pill,
+    .game-card.focused .play-pill {
+      background: var(--cyan);
+      color: #050814;
+    }
+
+    .game-card.featured .play-pill {
+      background: linear-gradient(180deg, #facc15 0%, #f97316 100%);
+      border-color: #fef08a;
+      color: #090d1b;
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.5);
+    }
+
+    .footer-bar {
+      font-family: var(--font-retro);
+      font-size: 19px;
+      color: #94a3b8;
+      text-align: center;
+      background: rgba(9, 15, 31, 0.8);
+      border: 1px solid #223357;
+      border-radius: 999px;
+      padding: 6px 18px;
+    }
+
+    .footer-bar kbd {
+      font-family: var(--font-pixel);
+      font-size: 7.5px;
+      padding: 2px 5px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      color: var(--gold);
+    }
+
+    @media (max-width: 980px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+        max-width: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="crt-lines"></div>
+
+  <div class="launcher">
+    <header class="hero">
+      <div class="coin-pill">★ COLECCIÓN RETRO ARCADE 198X • 3 VERSIONES JUGABLES ★</div>
+      <h1>ASTRO ARCADE <span>MULTIVERSO</span></h1>
+      <p class="hero-sub">
+        Elige cualquiera de las 2 ediciones clásicas originales o despega en la nueva <strong>Versión 3 Ultra</strong> con todos los assets combinados, nuevas naves, enemigos, soles, planetas, estaciones y robots cósmicos.
+      </p>
+    </header>
+
+    <section class="cards-grid" id="cards-grid">
+      <!-- VERSION 1 -->
+      <a class="game-card" data-idx="0" href="astro_pixel_storm.html">
+        <div class="card-top">
+          <span class="ver-badge">VERSIÓN 1 • ORIGINAL</span>
+          <span class="key-hint">TECLA [1]</span>
+        </div>
+        <div class="preview-frame">
+          <canvas id="preview-v1" width="320" height="200"></canvas>
+        </div>
+        <h2 class="card-title">ASTRO PIXEL STORM</h2>
+        <p class="card-desc">
+          Arcade panorámico 960×600 con Interceptor clásico, medusas rojas y áureas, Bomba Nova, sistema de combos y Estación Jefe Kronos.
+        </p>
+        <div class="tags-list">
+          <span class="tag">PANORÁMICO</span>
+          <span class="tag">BOMBA NOVA</span>
+          <span class="tag">ESTACIÓN KRONOS</span>
+        </div>
+        <div class="card-footer">
+          <div class="hi-box">
+            <span>RÉCORD</span>
+            <strong id="hi-v1">000000</strong>
+          </div>
+          <span class="play-pill">JUGAR ▶</span>
+        </div>
+      </a>
+
+      <!-- VERSION 2 -->
+      <a class="game-card" data-idx="1" href="variante_juego_01/ai_studio_code.html">
+        <div class="card-top">
+          <span class="ver-badge v2">VERSIÓN 2 • VARIANTE 01</span>
+          <span class="key-hint">TECLA [2]</span>
+        </div>
+        <div class="preview-frame">
+          <canvas id="preview-v2" width="320" height="200"></canvas>
+        </div>
+        <h2 class="card-title">ASTRO VANGUARDIA</h2>
+        <p class="card-desc">
+          Cabina arcade vertical 3:4 con barra de escudo HP, planetas pixel-art AI/ML &amp; GEN AI con dithering Bayer, drones y Estación Dreadnought.
+        </p>
+        <div class="tags-list">
+          <span class="tag">VERTICAL 3:4</span>
+          <span class="tag">PLANETAS AI/ML</span>
+          <span class="tag">DREADNOUGHT</span>
+        </div>
+        <div class="card-footer">
+          <div class="hi-box">
+            <span>RÉCORD</span>
+            <strong id="hi-v2">000000</strong>
+          </div>
+          <span class="play-pill">JUGAR ▶</span>
+        </div>
+      </a>
+
+      <!-- VERSION 3 (NEW FEATURED) -->
+      <a class="game-card featured focused" data-idx="2" href="variante_juego_02/index.html">
+        <div class="card-top">
+          <span class="ver-badge v3">★ VERSIÓN 3 • NUEVA ULTRA ★</span>
+          <span class="key-hint">TECLA [3]</span>
+        </div>
+        <div class="preview-frame">
+          <canvas id="preview-v3" width="320" height="200"></canvas>
+        </div>
+        <h2 class="card-title">ASTRO COSMOS ULTRA</h2>
+        <p class="card-desc">
+          Edición definitiva que fusiona los assets de V1 y V2 con 4 naves elegibles, 10 enemigos, 3 megajefes y fondos vivos con soles, nebulosas, megaciudadelas y robots cósmicos.
+        </p>
+        <div class="tags-list">
+          <span class="tag">4 NAVES + DRONES</span>
+          <span class="tag">SOLES &amp; ROBOTS</span>
+          <span class="tag">3 MEGAJEFES</span>
+          <span class="tag">GALERÍA ASSETS</span>
+        </div>
+        <div class="card-footer">
+          <div class="hi-box">
+            <span>RÉCORD</span>
+            <strong id="hi-v3">000000</strong>
+          </div>
+          <span class="play-pill">JUGAR V3 ★</span>
+        </div>
+      </a>
+    </section>
+
+    <footer class="footer-bar">
+      Usa <kbd>←</kbd> <kbd>→</kbd> y <kbd>ENTER</kbd> o pulsa <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> • También puedes volver al selector en cualquier momento con el botón <strong>◀ MENÚ</strong>.
+    </footer>
+  </div>
+
+  <!-- Reuse V3 complete pixel-art asset engine for crisp live cabinet previews -->
+  <script src="variante_juego_02/assets.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const A = window.ASTRO_ASSETS;
+
+      // Load saved high scores for all 3 versions
+      const hi1 = Number(localStorage.getItem('astro_pixel_storm_highscore_v1') || 0);
+      const hi2 = Number(localStorage.getItem('astro_vanguardia_hi') || 0);
+      const hi3 = Number(localStorage.getItem('astro_cosmos_ultra_highscore_v3') || 0);
+      document.getElementById('hi-v1').textContent = String(hi1).padStart(6, '0');
+      document.getElementById('hi-v2').textContent = String(hi2).padStart(6, '0');
+      document.getElementById('hi-v3').textContent = String(hi3).padStart(6, '0');
+
+      // Keyboard navigation for cards
+      const cards = Array.from(document.querySelectorAll('.game-card'));
+      let selected = 2; // default focus on the new Version 3 Ultra
+
+      function setSelected(idx) {
+        selected = (idx + cards.length) % cards.length;
+        cards.forEach((c, i) => c.classList.toggle('focused', i === selected));
+      }
+
+      cards.forEach((card, i) => {
+        card.addEventListener('mouseenter', () => setSelected(i));
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+          setSelected(selected + 1);
+        } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+          setSelected(selected - 1);
+        } else if (e.code === 'Digit1') {
+          window.location.href = cards[0].getAttribute('href');
+        } else if (e.code === 'Digit2') {
+          window.location.href = cards[1].getAttribute('href');
+        } else if (e.code === 'Digit3') {
+          window.location.href = cards[2].getAttribute('href');
+        } else if (e.code === 'Enter' || e.code === 'Space') {
+          e.preventDefault();
+          window.location.href = cards[selected].getAttribute('href');
+        }
+      });
+
+      // Ambient Starfield Background
+      const bgCanvas = document.getElementById('bg-canvas');
+      const bgCtx = bgCanvas.getContext('2d');
+      let bw = 0;
+      let bh = 0;
+      const bgStars = Array.from({ length: 120 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        spd: 0.015 + Math.random() * 0.05,
+        sz: Math.random() < 0.25 ? 3 : 2,
+        col: ['#ffffff', '#93c5fd', '#fde047', '#f472b6', '#67e8f9'][Math.floor(Math.random() * 5)],
+        ph: Math.random() * 6.28
+      }));
+
+      function resizeBg() {
+        bw = bgCanvas.width = window.innerWidth;
+        bh = bgCanvas.height = window.innerHeight;
+        bgCtx.imageSmoothingEnabled = false;
+      }
+      window.addEventListener('resize', resizeBg);
+      resizeBg();
+
+      // Live Preview Canvases
+      const ctx1 = document.getElementById('preview-v1').getContext('2d');
+      const ctx2 = document.getElementById('preview-v2').getContext('2d');
+      const ctx3 = document.getElementById('preview-v3').getContext('2d');
+      [ctx1, ctx2, ctx3].forEach((c) => { c.imageSmoothingEnabled = false; });
+
+      function drawScaled(ctx, img, cx, cy, scale) {
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        ctx.drawImage(img, Math.round(cx - w / 2), Math.round(cy - h / 2), w, h);
+      }
+
+      function renderPreviewV1(t) {
+        const W = 320, H = 200;
+        const g = ctx1.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#09152b');
+        g.addColorStop(1, '#1c2026');
+        ctx1.fillStyle = g;
+        ctx1.fillRect(0, 0, W, H);
+
+        // Stars
+        for (let i = 0; i < 24; i++) {
+          ctx1.fillStyle = i % 3 === 0 ? '#f472b6' : '#cbd5e1';
+          ctx1.fillRect((i * 47) % W, ((i * 31 + t * (16 + (i % 4) * 8)) % H), 2, 2);
+        }
+
+        // V1 Planet & Solar Station
+        drawScaled(ctx1, A.PLANETS[7].canvas, 62, 68, 0.56);
+        ctx1.save();
+        ctx1.globalAlpha = 0.72;
+        drawScaled(ctx1, A.STATIONS[0].canvas, 250, 56 + Math.sin(t * 1.4) * 4, 0.55);
+        ctx1.restore();
+
+        // V1 Enemies
+        const f = Math.floor(t * 4) % 2;
+        const sway = Math.sin(t * 1.8) * 20;
+        drawScaled(ctx1, f ? A.SPRITES.redJelly0 : A.SPRITES.redJelly1, 115 + sway, 68, 0.72);
+        drawScaled(ctx1, f ? A.SPRITES.goldJelly0 : A.SPRITES.goldJelly1, 165 + sway, 62, 0.72);
+        drawScaled(ctx1, A.SPRITES.ufo, 215 + sway, 72, 0.72);
+
+        // V1 Lasers & Ship
+        const sx = 160 + Math.sin(t * 1.5) * 62;
+        const ly = 148 - ((t * 190) % 95);
+        ctx1.fillStyle = '#3b82f6';
+        ctx1.fillRect(sx - 10, ly, 3, 12);
+        ctx1.fillRect(sx + 7, ly, 3, 12);
+        drawScaled(ctx1, A.SHIPS.interceptor.sprite, sx, 162, 0.78);
+      }
+
+      function renderPreviewV2(t) {
+        const W = 320, H = 200;
+        // Cabinet side pillars for 3:4 vertical feel
+        ctx2.fillStyle = '#050814';
+        ctx2.fillRect(0, 0, W, H);
+
+        const cx0 = 85, cw = 150;
+        const g = ctx2.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#091833');
+        g.addColorStop(1, '#18181b');
+        ctx2.fillStyle = g;
+        ctx2.fillRect(cx0, 0, cw, H);
+        ctx2.strokeStyle = '#f59e0b';
+        ctx2.lineWidth = 2;
+        ctx2.strokeRect(cx0, 1, cw, H - 2);
+
+        ctx2.save();
+        ctx2.beginPath();
+        ctx2.rect(cx0 + 1, 1, cw - 2, H - 2);
+        ctx2.clip();
+
+        // Pink crosses & stars
+        for (let i = 0; i < 16; i++) {
+          ctx2.fillStyle = i % 4 === 0 ? '#f472b6' : '#e2e8f0';
+          ctx2.fillRect(cx0 + 8 + (i * 23) % (cw - 16), (i * 29 + t * 24) % H, 2, 2);
+        }
+
+        // V2 AI/ML Planet & Cross Station
+        drawScaled(ctx2, A.PLANETS[0].canvas, cx0 + 36, 62, 0.5);
+        drawScaled(ctx2, A.STATIONS[1].canvas, cx0 + 118, 96, 0.42);
+
+        // V2 Boss Dreadnought + Vanguard Ship
+        drawScaled(ctx2, A.SPRITES.bossDreadnought, cx0 + cw / 2 + Math.sin(t * 1.4) * 20, 48, 0.45);
+        const sx = cx0 + cw / 2 + Math.cos(t * 1.7) * 38;
+        drawScaled(ctx2, A.SHIPS.vanguard.sprite, sx, 166, 0.72);
+        ctx2.restore();
+      }
+
+      function renderPreviewV3(t) {
+        const W = 320, H = 200;
+        const g = ctx3.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#090924');
+        g.addColorStop(0.55, '#13133b');
+        g.addColorStop(1, '#0c1c2e');
+        ctx3.fillStyle = g;
+        ctx3.fillRect(0, 0, W, H);
+
+        // Nebula & Golden Sun
+        ctx3.save();
+        ctx3.globalAlpha = 0.75;
+        drawScaled(ctx3, A.NEBULAE[0], 110, 95, 0.6);
+        ctx3.restore();
+        drawScaled(ctx3, A.SUNS[0].canvas, 272, 46, 0.46 + Math.sin(t * 2) * 0.015);
+
+        // Stars
+        for (let i = 0; i < 28; i++) {
+          ctx3.fillStyle = i % 3 === 0 ? '#67e8f9' : (i % 3 === 1 ? '#fde047' : '#ffffff');
+          ctx3.fillRect((i * 41) % W, ((i * 23 + t * (18 + (i % 4) * 7)) % H), 2, 2);
+        }
+
+        // Terra Planet + Ring Citadel Station + Giant Astral Cosmic Robot!
+        drawScaled(ctx3, A.PLANETS[1].canvas, 56, 62, 0.48);
+        drawScaled(ctx3, A.STATIONS[2].canvas, 178, 52 + Math.sin(t * 1.2) * 3, 0.42);
+        ctx3.save();
+        ctx3.globalAlpha = 0.88;
+        drawScaled(ctx3, A.COSMIC_ROBOTS[0].canvas, 266, 134 + Math.sin(t * 1.8) * 5, 0.56);
+        ctx3.restore();
+
+        // New Enemies (Plasma Jelly + MechaBot)
+        const f = Math.floor(t * 4.5) % 2;
+        const sway = Math.sin(t * 2) * 18;
+        drawScaled(ctx3, f ? A.SPRITES.plasmaJelly0 : A.SPRITES.plasmaJelly1, 108 + sway, 98, 0.65);
+        drawScaled(ctx3, f ? A.SPRITES.mechBot0 : A.SPRITES.mechBot1, 166 + sway, 94, 0.65);
+
+        // New Playable Ships (Valquiria + Espectro)
+        const sx = 132 + Math.sin(t * 1.6) * 48;
+        const ly = 148 - ((t * 210) % 90);
+        ctx3.fillStyle = '#facc15';
+        ctx3.fillRect(sx - 9, ly, 3, 12);
+        ctx3.fillRect(sx + 6, ly, 3, 12);
+        drawScaled(ctx3, A.SHIPS.valkyrie.sprite, sx, 166, 0.72);
+        drawScaled(ctx3, A.SPRITES.wingman, sx + Math.cos(t * 3.5) * 28, 162 + Math.sin(t * 3.5) * 10, 0.7);
+      }
+
+      let last = performance.now();
+      let elapsed = 0;
+      function tick(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        elapsed += dt;
+
+        // Draw Ambient Launcher Starfield
+        const g = bgCtx.createLinearGradient(0, 0, 0, bh);
+        g.addColorStop(0, '#050817');
+        g.addColorStop(0.5, '#0b1229');
+        g.addColorStop(1, '#070b18');
+        bgCtx.fillStyle = g;
+        bgCtx.fillRect(0, 0, bw, bh);
+
+        for (const s of bgStars) {
+          s.y += s.spd * dt;
+          if (s.y > 1) { s.y = 0; s.x = Math.random(); }
+          bgCtx.globalAlpha = 0.45 + 0.55 * Math.sin(elapsed * 2.5 + s.ph);
+          bgCtx.fillStyle = s.col;
+          bgCtx.fillRect(Math.round(s.x * bw), Math.round(s.y * bh), s.sz, s.sz);
+        }
+        bgCtx.globalAlpha = 1;
+
+        renderPreviewV1(elapsed);
+        renderPreviewV2(elapsed);
+        renderPreviewV3(elapsed);
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>

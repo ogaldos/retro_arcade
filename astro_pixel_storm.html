@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ASTRO PIXEL STORM — Arcade Retro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .menu-back-link {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      border-color: #ff9f1c !important;
+      color: #ffd13b !important;
+    }
+    .menu-back-link:hover {
+      background: rgba(255, 159, 28, 0.22) !important;
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="arcade-shell">
+    <!-- Top Arcade Marquee / HUD Bar -->
+    <header class="hud-bar">
+      <div class="hud-group">
+        <div class="hud-item">
+          <span class="hud-label">PUNTOS</span>
+          <span id="hud-score" class="hud-value accent-cyan">000000</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">RÉCORD</span>
+          <span id="hud-high" class="hud-value accent-gold">000000</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">SECTOR</span>
+          <span id="hud-wave" class="hud-value accent-pink">01</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">COMBO</span>
+          <span id="hud-combo" class="hud-value accent-orange">x1</span>
+        </div>
+      </div>
+
+      <div class="hud-group hud-right">
+        <div class="hud-item">
+          <span class="hud-label">NAVES</span>
+          <div id="hud-lives" class="lives-strip"></div>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">BOMBAS NOVA</span>
+          <div id="hud-bombs" class="bombs-strip"></div>
+        </div>
+        <div class="hud-controls">
+          <a href="index.html" class="pixel-btn menu-back-link" title="Volver al selector de versiones">◀ MENÚ</a>
+          <button id="btn-autofire" class="pixel-btn active" title="Auto-disparo (F)">AUTO: ON</button>
+          <button id="btn-crt" class="pixel-btn active" title="Efecto CRT (C)">CRT</button>
+          <button id="btn-sound" class="pixel-btn active" title="Sonido / Música (M)">SFX</button>
+          <button id="btn-pause" class="pixel-btn" title="Pausa (P)">PAUSA</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Neon Orange Arcade Divider (inspired by Image 2) -->
+    <div class="neon-divider"></div>
+
+    <!-- Main Game Viewport -->
+    <main class="stage-wrapper">
+      <canvas id="game-canvas" width="960" height="600"></canvas>
+      <div id="crt-overlay" class="crt-overlay"></div>
+
+      <!-- Boss Health Bar Overlay -->
+      <div id="boss-hud" class="boss-hud hidden">
+        <div class="boss-title-row">
+          <span id="boss-name">ESTACIÓN ORBITAL KRONOS</span>
+          <span id="boss-hp-text">100%</span>
+        </div>
+        <div class="boss-bar-track">
+          <div id="boss-bar-fill" class="boss-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Powerup / Weapon Status Pill -->
+      <div id="weapon-hud" class="weapon-hud">
+        <span id="weapon-badge" class="badge">LÁSER DOBLE</span>
+        <span id="shield-badge" class="badge shield hidden">ESCUDO ACTIVO</span>
+        <span id="overdrive-badge" class="badge overdrive hidden">TURBO</span>
+      </div>
+
+      <!-- Start / Title Screen Overlay -->
+      <div id="overlay-start" class="screen-overlay">
+        <div class="overlay-card">
+          <div class="marquee-tag">1 CRÉDITO • EDICIÓN ARCADE 198X</div>
+          <h1 class="game-title">ASTRO PIXEL<br /><span>STORM</span></h1>
+          <p class="subtitle">
+            Defiende la galaxia entre planetas pixelados y estaciones orbitales contra la flota de medusas cósmicas.
+          </p>
+
+          <div class="enemy-showcase">
+            <div class="showcase-item">
+              <canvas class="mini-sprite" data-sprite="player" width="44" height="44"></canvas>
+              <span>INTERCEPTOR</span>
+            </div>
+            <div class="showcase-item">
+              <canvas class="mini-sprite" data-sprite="redJelly" width="44" height="44"></canvas>
+              <span>MEDUSA ROJA<br />100 PTS</span>
+            </div>
+            <div class="showcase-item">
+              <canvas class="mini-sprite" data-sprite="goldJelly" width="44" height="44"></canvas>
+              <span>MEDUSA ÁUREA<br />180 PTS</span>
+            </div>
+            <div class="showcase-item">
+              <canvas class="mini-sprite" data-sprite="ufo" width="44" height="44"></canvas>
+              <span>CENTINELA<br />250 PTS</span>
+            </div>
+            <div class="showcase-item">
+              <canvas class="mini-sprite" data-sprite="stationMini" width="44" height="44"></canvas>
+              <span>ESTACIÓN JEFE<br />2500 PTS</span>
+            </div>
+          </div>
+
+          <div class="controls-grid">
+            <div><kbd>WASD</kbd> / <kbd>FLECHAS</kbd> o <kbd>RATÓN</kbd> Mover nave</div>
+            <div><kbd>ESPACIO</kbd> Disparar (o Auto-disparo)</div>
+            <div><kbd>SHIFT</kbd> / <kbd>X</kbd> / <kbd>CLIC DER.</kbd> Bomba Nova</div>
+            <div><kbd>P</kbd> Pausa • <kbd>M</kbd> Sonido • <kbd>C</kbd> CRT</div>
+          </div>
+
+          <button id="btn-start" class="cta-btn">DESPEGAR [ESPACIO]</button>
+        </div>
+      </div>
+
+      <!-- Pause Overlay -->
+      <div id="overlay-pause" class="screen-overlay hidden">
+        <div class="overlay-card compact">
+          <h2 class="pause-title">JUEGO EN PAUSA</h2>
+          <p class="subtitle">Pulsa <kbd>P</kbd> o el botón para continuar la misión.</p>
+          <div class="btn-row">
+            <button id="btn-resume" class="cta-btn">CONTINUAR</button>
+            <button id="btn-restart-pause" class="pixel-btn large">REINICIAR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div id="overlay-gameover" class="screen-overlay hidden">
+        <div class="overlay-card compact">
+          <div id="gameover-tag" class="marquee-tag danger">SEÑAL PERDIDA</div>
+          <h2 class="gameover-title">GAME OVER</h2>
+          <div class="final-stats">
+            <div class="stat-box">
+              <span>PUNTUACIÓN</span>
+              <strong id="final-score">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>SECTOR ALCANZADO</span>
+              <strong id="final-wave">1</strong>
+            </div>
+            <div class="stat-box">
+              <span>RÉCORD</span>
+              <strong id="final-high">0</strong>
+            </div>
+          </div>
+          <p id="new-record-msg" class="new-record hidden">★ ¡NUEVO RÉCORD GALÁCTICO! ★</p>
+          <button id="btn-retry" class="cta-btn">INSERTAR MONEDA [ESPACIO]</button>
+        </div>
+      </div>
+
+      <!-- Mobile / Touch Quick Controls -->
+      <div class="touch-controls">
+        <button id="btn-touch-bomb" class="touch-btn">BOMBA NOVA</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
