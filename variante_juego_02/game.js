@@ -97,6 +97,9 @@
       gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
+      osc.onended = () => {
+        try { osc.disconnect(); gain.disconnect(); } catch (_) {}
+      };
       osc.start(now);
       osc.stop(now + dur + 0.01);
     }
@@ -121,6 +124,9 @@
       src.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
+      src.onended = () => {
+        try { src.disconnect(); filter.disconnect(); gain.disconnect(); } catch (_) {}
+      };
       src.start();
     }
 
@@ -130,10 +136,16 @@
     }
 
     hit() {
+      const now = performance.now();
+      if (this._lastHit && now - this._lastHit < 35) return;
+      this._lastHit = now;
       this.tone(350, 150, 0.045, 'triangle', 0.045);
     }
 
     explode(big = false) {
+      const now = performance.now();
+      if (!big && this._lastExplode && now - this._lastExplode < 45) return;
+      this._lastExplode = now;
       this.noise(big ? 0.5 : 0.19, big ? 0.18 : 0.09);
       this.tone(big ? 150 : 250, 40, big ? 0.45 : 0.16, 'sawtooth', big ? 0.095 : 0.055);
     }
@@ -684,8 +696,9 @@
 
   function spawnExplosion(x, y, mainColor, count = 20, big = false) {
     const pal = [mainColor, '#facc15', '#f472b6', '#22d3ee', '#ffffff'];
-    for (let i = 0; i < count; i++) {
-      const ang = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.45;
+    const allowed = Math.max(0, Math.min(count, 240 - particles.length));
+    for (let i = 0; i < allowed; i++) {
+      const ang = (Math.PI * 2 * i) / Math.max(1, allowed) + (Math.random() - 0.5) * 0.45;
       const spd = (big ? 90 : 60) + Math.random() * (big ? 210 : 165);
       particles.push({
         x, y,
@@ -699,21 +712,25 @@
     }
 
     // V1 8-pixel burst ring
-    sparkles.push({
-      x, y,
-      radius: 4,
-      maxRadius: big ? 42 : 26,
-      life: big ? 0.55 : 0.42,
-      maxLife: big ? 0.55 : 0.42
-    });
+    if (sparkles.length < 36) {
+      sparkles.push({
+        x, y,
+        radius: 4,
+        maxRadius: big ? 42 : 26,
+        life: big ? 0.55 : 0.42,
+        maxLife: big ? 0.55 : 0.42
+      });
+    }
 
     // V2 firework sprite burst
-    fireworks.push({
-      x, y,
-      scale: big ? 1.55 : 0.85,
-      life: big ? 0.52 : 0.36,
-      maxLife: big ? 0.52 : 0.36
-    });
+    if (fireworks.length < 30) {
+      fireworks.push({
+        x, y,
+        scale: big ? 1.55 : 0.85,
+        life: big ? 0.52 : 0.36,
+        maxLife: big ? 0.52 : 0.36
+      });
+    }
   }
 
   function addFloatingText(x, y, text, color = '#facc15') {
@@ -1194,6 +1211,7 @@
     // Enemy Bullets
     for (let i = enemyBullets.length - 1; i >= 0; i--) {
       const eb = enemyBullets[i];
+      if (!eb) continue;
       eb.x += eb.vx * dt;
       eb.y += eb.vy * dt;
       if (eb.y > H + 24 || eb.y < -24 || eb.x < -24 || eb.x > W + 24) {
@@ -1203,8 +1221,11 @@
       if (Math.hypot(eb.x - player.x, eb.y - player.y) < 16) {
         enemyBullets.splice(i, 1);
         damagePlayer();
+        // Shield absorption clears enemyBullets = []; stop iterating safely
+        break;
       }
     }
+    if (state.mode !== 'playing') return;
 
     // Enemies Update
     const sway = Math.sin(state.time * 1.45) * 44;
@@ -2041,11 +2062,15 @@
 
   let lastTime = performance.now();
   function loop(now) {
-    const dt = Math.min(0.05, (now - lastTime) / 1000);
-    lastTime = now;
-    update(dt);
-    render();
     requestAnimationFrame(loop);
+    const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
+    lastTime = now;
+    try {
+      update(dt);
+      render();
+    } catch (err) {
+      console.error('Error en el bucle del juego:', err);
+    }
   }
   requestAnimationFrame(loop);
 })();

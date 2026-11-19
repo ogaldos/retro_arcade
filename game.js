@@ -1160,6 +1160,7 @@
     // Enemy Bullets
     for (let i = enemyBullets.length - 1; i >= 0; i--) {
       const eb = enemyBullets[i];
+      if (!eb) continue;
       eb.x += eb.vx * dt;
       eb.y += eb.vy * dt;
       if (eb.y > H + 20 || eb.y < -20 || eb.x < -20 || eb.x > W + 20) {
@@ -1169,8 +1170,10 @@
       if (Math.hypot(eb.x - player.x, eb.y - player.y) < 16) {
         enemyBullets.splice(i, 1);
         damagePlayer();
+        break;
       }
     }
+    if (state.mode !== 'playing') return;
 
     // Update Formation Enemies
     const formationSway = Math.sin(state.time * 1.4) * 38;
@@ -1916,11 +1919,15 @@
 
   let lastTime = performance.now();
   function loop(now) {
-    const dt = Math.min(0.05, (now - lastTime) / 1000);
-    lastTime = now;
-    update(dt);
-    render();
     requestAnimationFrame(loop);
+    const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
+    lastTime = now;
+    try {
+      update(dt);
+      render();
+    } catch (err) {
+      console.error('Error en el bucle del juego:', err);
+    }
   }
 
   requestAnimationFrame(loop);
